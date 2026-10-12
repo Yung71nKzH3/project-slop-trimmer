@@ -7,7 +7,7 @@
 
 ## 🎯 The Problem
 
-When you mount multiple MCP servers (Postgres, Git, Filesystem, Cloud APIs) and install domain plugins, modern AI agents inject **every single tool schema and skill description** directly into the system prompt:
+When you mount multiple MCP servers (Postgres, Git, Filesystem, Cloud APIs) and install domain plugins, modern AI agents inject **every single tool schema and skill description** directly into the sys[...]
 
 - **130+ Skills & 25+ Tools** consume **~24,000 tokens** before you even type your first prompt turn.
 - In Antigravity, this directly exceeds the **20,000 Customization Token Budget**, causing the IDE to warn:  
@@ -26,15 +26,15 @@ When you mount multiple MCP servers (Postgres, Git, Filesystem, Cloud APIs) and 
 4. `load_skill(skill_name: str)`: Pulls complete markdown instructions into context only when needed.
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
+┌─────────────────────────────────────────────────────────────────��[...]
 │                           AI AGENT                              │
 │              (Sees ONLY 4 Meta-Tools in Prompt)                 │
-└────────────────────────────────┬────────────────────────────────┘
+└────────────────────────────────┬────────────────────────────────��[...]
                                  │
                    stdio JSON-RPC (4 Meta-Tools)
                                  │
                                  ▼
-┌─────────────────────────────────────────────────────────────────┐
+┌─────────────────────────────────────────────────────────────────��[...]
 │                           mcp-turbo                             │
 │  ├─ Dynamic Plugin Auto-Discovery (zero-maintenance setup)      │
 │  ├─ Schema Minifier (-78% schema token weight)                  │
@@ -42,7 +42,7 @@ When you mount multiple MCP servers (Postgres, Git, Filesystem, Cloud APIs) and 
 │  ├─ In-Memory BM25 Registry (Tools + 130+ Skills)               │
 │  ├─ Idempotent LRU Output Cache (Sub-ms repeated queries)       │
 │  └─ Dynamic Tool Elevation (Promotes high-traffic tools)        │
-└────────────┬───────────────────┼────────────────────┬───────────┘
+└────────────┬───────────────────┼────────────────────┬───────────��[...]
              │ stdio             │ stdio              │ SSE / HTTP
              ▼                   ▼                    ▼
      ┌───────────────┐   ┌───────────────┐    ┌───────────────┐
@@ -95,8 +95,8 @@ pipx install mcp-turbo
 
 ### Option 3: From Source (Development)
 ```bash
-git clone https://github.com/your-username/mcp-turbo.git
-cd mcp-turbo
+git clone https://github.com/Yung71nKzH3/project-slop-trimmer.git
+cd project-slop-trimmer
 uv venv
 source .venv/bin/activate  # or .\.venv\Scripts\activate on Windows
 uv pip install -e .
