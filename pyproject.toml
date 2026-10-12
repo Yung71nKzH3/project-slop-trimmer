@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcp-turbo"
+version = "0.1.0"
+description = "High-performance zero-bloat MCP proxy server with schema minification and on-demand search"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=1.0.0",
+]
+
+[project.scripts]
+mcp-turbo = "mcp_turbo.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_turbo"]
