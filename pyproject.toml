@@ -14,6 +14,7 @@ dependencies = [
 
 [project.scripts]
 mcp-turbo = "mcp_turbo.server:main"
+mcp-turbo-setup = "mcp_turbo.setup_cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mcp_turbo"]
