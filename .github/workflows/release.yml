@@ -1,0 +1,52 @@
+name: Release Binaries & PyPI Package
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-binaries:
+    name: Build Standalone Binary on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: mcp-turbo-linux-x86_64
+            asset_name: mcp-turbo-linux-x86_64
+          - os: macos-latest
+            artifact_name: mcp-turbo-darwin-arm64
+            asset_name: mcp-turbo-darwin-arm64
+          - os: windows-latest
+            artifact_name: mcp-turbo-windows-x86_64.exe
+            asset_name: mcp-turbo-windows-x86_64.exe
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install PyInstaller and dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller .
+
+      - name: Build Standalone Binary
+        run: |
+          pyinstaller --onefile --name ${{ matrix.asset_name }} src/mcp_turbo/server.py
+
+      - name: Upload Binary Release Asset
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: dist/${{ matrix.asset_name }}

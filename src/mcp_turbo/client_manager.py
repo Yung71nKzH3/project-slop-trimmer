@@ -260,9 +260,8 @@ class ClientManager:
 
         return parsed
 
-    async def initialize(self, config_path: str | Path) -> int:
-        """Start all configured servers and build search registry."""
-        server_configs = self.load_config(config_path)
+    async def initialize_with_specs(self, server_configs: dict[str, dict[str, Any]]) -> int:
+        """Start all configured servers and build search registry from pre-parsed specs."""
         all_tools: list[ToolMeta] = []
 
         for name, spec in server_configs.items():
@@ -292,6 +291,11 @@ class ClientManager:
 
         self.index.build(all_tools)
         return len(all_tools)
+
+    async def initialize(self, config_path: str | Path) -> int:
+        """Start all configured servers and build search registry."""
+        server_configs = self.load_config(config_path)
+        return await self.initialize_with_specs(server_configs)
 
     def search_tools(self, query: str, limit: int = 3) -> list[dict[str, Any]]:
         """Search tools and return compact minified tool schemas."""

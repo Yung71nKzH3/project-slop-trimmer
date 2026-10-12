@@ -1,4 +1,4 @@
-"""Meta MCP Server exposing on-demand tool search and routing execution."""
+"""Meta MCP Server exposing on-demand tool & skill search and routing execution."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import asyncio
 import logging
 import os
 import sys
+from pathlib import Path
 from typing import Any
 
 # Support both mcp 2.x (MCPServer) and mcp 1.x (FastMCP)
@@ -16,7 +17,9 @@ except ImportError:
     from mcp.server.fastmcp import FastMCP as MCPServer
 
 from .client_manager import ClientManager
+from .discovery import auto_discover_all_servers, get_default_search_paths
 from .minifier import dumps_compact
+from .skills import SkillManager
 
 # Setup stderr logger so stdio protocol on stdout remains pristine
 logging.basicConfig(
@@ -29,14 +32,15 @@ logger = logging.getLogger("mcp_turbo.server")
 mcp_app = MCPServer(
     "mcp-turbo",
     instructions=(
-        "mcp-turbo is a high-performance proxy routing calls to downstream MCP servers. "
-        "Direct downstream tools are hidden to eliminate prompt token bloat. "
-        "Always call 'registry_search' first to discover tool schemas, then call 'execute_tool' "
-        "with the discovered arguments."
+        "mcp-turbo is a high-performance proxy routing calls to downstream MCP servers "
+        "and caching skills to prevent prompt bloat. Direct downstream tools and skills "
+        "are hidden. Use 'registry_search' to discover tool schemas, 'execute_tool' to run them, "
+        "and 'skill_search' / 'load_skill' to access workflow runbooks on demand."
     ),
 )
 
 client_mgr = ClientManager()
+skill_mgr = SkillManager()
 
 
 @mcp_app.tool()
@@ -77,9 +81,42 @@ async def execute_tool(tool_name: str, arguments: dict[str, Any] | None = None) 
     return await client_mgr.execute_tool(tool_name, arguments or {})
 
 
+@mcp_app.tool()
+def skill_search(query: str, limit: int = 3) -> str:
+    """Search for relevant workflow skills and domain runbooks on demand.
+
+    Solves prompt bloat by keeping 100+ skill guides in an on-demand registry.
+
+    Args:
+        query: Topic, language, or workflow (e.g., 'flutter unit test', 'bigquery sql', 'firebase auth').
+        limit: Maximum number of skill summaries to return (default 3).
+
+    Returns:
+        JSON list of candidate skills with their names and descriptions.
+    """
+    clean_limit = max(1, min(limit, 5))
+    results = skill_mgr.search_skills(query, limit=clean_limit)
+    return dumps_compact(results)
+
+
+@mcp_app.tool()
+def load_skill(skill_name: str) -> str:
+    """Fetch the full instructions and guidelines for a specific skill into context.
+
+    Call this after identifying a skill name from 'skill_search'.
+
+    Args:
+        skill_name: The exact name of the skill (e.g., 'gemini-api-dev', 'dart-add-unit-test').
+
+    Returns:
+        The complete markdown instructions for that skill.
+    """
+    return skill_mgr.get_skill_content(skill_name)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="mcp-turbo: Zero-bloat MCP proxy with on-demand tool search"
+        description="mcp-turbo: Zero-bloat MCP & Skills proxy with on-demand search"
     )
     parser.add_argument(
         "--config",
@@ -92,9 +129,17 @@ def parse_args() -> argparse.Namespace:
 
 
 async def run_server(config_path: str) -> None:
-    logger.info("Initializing mcp-turbo with config: %s", config_path)
-    count = await client_mgr.initialize(config_path)
+    logger.info("Initializing mcp-turbo...")
+
+    # 1. Discover and initialize downstream MCP servers (auto-scans plugins + config)
+    servers = auto_discover_all_servers(config_path)
+    count = await client_mgr.initialize_with_specs(servers)
     logger.info("Loaded %d downstream tools into registry index.", count)
+
+    # 2. Discover and initialize Antigravity Skills
+    search_roots = get_default_search_paths()
+    skill_count = skill_mgr.discover_skills(search_roots)
+    logger.info("Indexed %d skills into on-demand skill registry.", skill_count)
 
     try:
         await mcp_app.run_stdio_async()
