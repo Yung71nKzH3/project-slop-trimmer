@@ -43,7 +43,7 @@ jobs:
 
       - name: Build Standalone Binary
         run: |
-          pyinstaller --onefile --name ${{ matrix.asset_name }} src/mcp_turbo/server.py
+          pyinstaller --onefile --paths src --name ${{ matrix.asset_name }} run_turbo.py
 
       - name: Upload Binary Release Asset
         uses: softprops/action-gh-release@v2

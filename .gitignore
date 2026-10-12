@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyInstaller / Build artifacts
+build/
+dist/
+*.spec
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Editor / IDE metadata
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# MCP / Testing logs and configs
+*.log
+test_mcp_config.json
+mcp_turbo_downstream.json
+
+# Packaging
+*.egg-info/
+.eggs/
